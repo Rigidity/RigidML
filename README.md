@@ -24,6 +24,19 @@ h1 => [
 $ => setTimeout(() => $("#dissapearing").hide(), 5000)
 ```
 
+## Application
+`app.page(url, text, dir)` Handles get requests with RigidML source text.  
+`app.pageFile(url, file)` Handles get requests with a RigidML file.  
+`app.api(url, handler)` Handles post requests with an API utility object.  
+`app.apiFile(url, file)` Handles post requests in a file in a bound utility object.  
+`app.static(path)` Includes a static folder on the application.  
+`app.rateLimit(url, amount, seconds, message)` Applies a rate limit to a url.  
+`app.get(url, handler)` Handles raw get requests.  
+`app.post(url, handler)` Handles raw post requests.  
+`app.put(url, handler)` Handles raw put requests.  
+`app.patch(url, handler)` Handles raw patch requests.  
+`app.delete(url, handler)` Handles raw delete requests.  
+
 ## Literals
 `array` Each item in the list is executed individually.  
 `string` Treated as plain HTML and is appended to the target element.  
