@@ -54,7 +54,7 @@ $ => setTimeout(() => $("#dissapearing").hide(), 5000)
 `undefined` Nothing is applied or done with an undefined value.
 
 ## Functions
-`key => val` The simplest type of function. Makes an HTML element.
+`key => val` The simplest type of function. Makes an HTML element.  
 `(key) => val` Defines a CSS property on the active element.  
 `($key) => val` Assigns an HTML property to the active element.  
 `($) => val` Includes a file relative to the current file.  
