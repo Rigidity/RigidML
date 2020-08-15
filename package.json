@@ -4,7 +4,7 @@
   "description": "Simplifies website and API development with an easy to use wrapper for HTML, CSS, and a few JS libraries.",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"No test specified.\""
+    "test": "node test.js"
   },
   "keywords": ["website", "template", "api", "wrapper", "html", "css", "express"],
   "author": "rigidity",
