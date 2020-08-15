@@ -1,13 +1,13 @@
 {
-  "name": "rml",
+  "name": "rigidml",
   "version": "1.0.0",
   "description": "Simplifies website and API development with an easy to use wrapper for HTML, CSS, and a few JS libraries.",
-  "main": "rml.js",
+  "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"No test specified.\""
   },
   "keywords": ["website", "template", "api", "wrapper", "html", "css", "express"],
-  "author": "Rigidity",
+  "author": "rigidity",
   "license": "MIT",
   "dependencies": {
     "body-parser": "^1.19.0",

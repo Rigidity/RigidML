@@ -16,8 +16,9 @@ h1 => [
 	($id) => 'dissapearing',
 	(color) => 'red',
 	(font) => '26px Sans-Serif',
-	"Hello, ", [
+	"Hello, ", p => [
 		(color) => 'blue',
+		(display) => 'inline-block',
 		"world"
 	], "!"
 ],
