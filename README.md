@@ -1,6 +1,15 @@
-# RML v1.0.0
+# RigidML v1.0.0
 
-## Example
+## Example (index.js)
+
+```js
+const {listen} = require("rigidml");
+
+const app = listen(80);
+app.pageFile("/", "home.js");
+```
+
+## Example (home.js)
 
 ```js
 h1 => [
@@ -12,12 +21,7 @@ h1 => [
 		"world"
 	], "!"
 ],
-$ => setTimeout(() =>
-	document.querySelectorAll("#dissapearing")
-		.forEach(element => {
-			element.style.display = "none";
-		}),
-	5000)
+$ => setTimeout(() => $("#dissapearing").hide(), 5000)
 ```
 
 ## Literals
