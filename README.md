@@ -15,7 +15,8 @@ app.pageFile("/", "home.js");
 h1 => [
 	($id) => 'dissapearing',
 	(color) => 'red',
-	(font) => '26px Sans-Serif',
+	(fontFamily) => 'Sans-Serif',
+	(fontSize) => '24px',
 	"Hello, ", p => [
 		(color) => 'blue',
 		(display) => 'inline-block',
