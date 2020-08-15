@@ -37,6 +37,14 @@ $ => setTimeout(() => $("#dissapearing").hide(), 5000)
 `app.patch(url, handler)` Handles raw patch requests.  
 `app.delete(url, handler)` Handles raw delete requests.  
 
+## API Utility
+`util.request` The raw request object.  
+`util.response` The raw response object.  
+`util.data` The JSON data parsed from the body.  
+`util.cookies` An assignable object of the browser's cookies.  
+`util.cookie(key, val, options)` Assigns a cookie to the response.  
+`util.error(message)` Sends a 400 status code and an error response.  
+
 ## Literals
 `array` Each item in the list is executed individually.  
 `string` Treated as plain HTML and is appended to the target element.  
