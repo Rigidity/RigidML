@@ -55,7 +55,9 @@ script => `setTimeout(() => $("#dissapearing").hide(), 5000)`
 `util.data` The JSON data parsed from the body.  
 `util.cookies` An assignable object of the browser's cookies.  
 `util.cookie(key, val, options)` Assigns a cookie to the response.  
-`util.error(message)` Sends a 400 status code and an error response.  
+`util.result(message)` Sends a 200 status code and an success message.  
+`util.error(message)` Sends a 400 status code and an error message.  
+`util.updateCookies()` Updates the cookies from the request to the response.  
 
 ## Literals
 `array` Each item in the list is executed individually.  

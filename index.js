@@ -166,28 +166,23 @@ class RML {
 	}
 	api(url, handler = () => {}) {
 		this.app.post(url, (req, res) => {
-			let sent = false;
 			const cookies = {...req.cookies};
 			handler({
 				request: req, response: res,
 				data: req.body, cookies,
-				cookie: (key, vak, options) => {
+				cookie: (key, val, options) => {
 					res.cookie(key, val, options);
 				},
-				error: message => {
-					if (sent) return;
-					res.status(400).send(new Error(message));
-					sent = true;
+				result: (message = "OK") => res.status(200).send(message),
+				error: (message = "ERR") => res.status(400).end(message),
+				updateCookies: () => {
+					for (const [key, val] of Object.entries(cookies)) {
+						if (req.cookies[key] === undefined || req.cookies[key] != cookies[key]) {
+							res.cookie(key, val);
+						}
+					}
 				}
 			});
-			for (const [key, val] of Object.entries(cookies)) {
-				if (req.cookies[key] === undefined || req.cookies[key] != cookies[key]) {
-					res.cookie(key, val);
-				}
-			}
-			if (!sent) {
-				res.status(200).send("OK");
-			}
 		});
 	}
 	apiFile(url, file = "api.js") {
