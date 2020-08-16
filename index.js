@@ -61,44 +61,36 @@ const template = `
 </html>
 `;
 
-function generate(item, document = new JSDOM(template).window.document, context = document.body, scope = {}) {
-	scope[":current"] = item;
-	scope[":document"] = document;
-	scope[":element"] = context;
+function generate(item, document, context, scope) {
 	if (typeof item == "string") {
 		context.innerHTML += item;
 	} else if (typeof item == "boolean") {
-		throw new Error("Booleam literals are not implemented.");
+		generate("" + item, document, context, scope);
 	} else if (typeof item == "function") {
 		const text = item.toString().split("=>")[0].trim();
-		if (text.replace(/[^a-zA-Z0-9$_{}()]/g, "") != text) {
-			throw new Error("Complex function literals are not implemented.");
+		if (text.replace(/[^a-zA-Z0-9$_()]/g, "") != text) {
+			throw new Error("Complex function literals are not supported.");
 		}
 		if (text == "$") {
-			const container = document.createElement("script");
-			container.innerHTML = item.toString().split("=>").slice(1).join("=>").trim();
-			context.appendChild(container);
+			const content = item();
+			if (typeof content != "function") {
+				throw new Error("Component definitions must be arrow functions.");
+			}
+			const name = content.toString().split("=>")[0].trim();
+			if (name.replace(/[^a-zA-Z0-9_$]/g, "") != name) {
+				throw new Error("Complex component definitions are not supported.");
+			}
+			scope.components[name] = content;
 		} else if (text.startsWith("$")) {
 			const subtext = text.slice(1);
-			scope[subtext] = item(scope[subtext]);
+			generate(scope.components[subtext](item()), document, context, scope);
 		} else if (text.startsWith("(") && text.endsWith(")")) {
 			const subtext = text.slice(1, -1).trim();
 			if (subtext == "$") {
-				generate(evaluate("[" + fs.readFileSync(path.join(scope[":path"], item()), "utf-8") + "]", scope), document, context, scope);
+				generate(evaluate("[" + fs.readFileSync(path.join(scope.path, item()), "utf-8") + "]", scope), document, context, scope);
 			} else if (subtext.startsWith("$")) {
 				const substr = subtext.slice(1);
 				context.setAttribute(substr, item());
-			} else if (subtext.startsWith("{") && subtext.endsWith("}")) {
-				const subobj = subtext.slice(1, -1).trim();
-				if (subobj == "$") {
-					generate(evaluate("[" + fs.readFileSync(item(), "utf-8") + "]", scope), document, context, scope);
-				} else if (subobj.startsWith("$")) {
-					throw new Error("Parenthesis object dollar prefix names are not implemented.");
-				} else if (subobj == "") {
-					throw new Error("Parenthesis object empty names are not implemented.");
-				} else {
-					throw new Error("Parenthesis object names are not implemented.");
-				}
 			} else if (subtext == "") {
 				generate(item(), document, context, scope);
 			} else {
@@ -110,19 +102,32 @@ function generate(item, document = new JSDOM(template).window.document, context 
 			context.appendChild(container);
 		}
 	} else if (typeof item == "number") {
-		throw new Error("Number literals are not implemented.");
+		generate("" + item, document, context, scope);
 	} else if (typeof item == "symbol") {
-		throw new Error("Symbol literals are not implemented.");
+		generate(item.toString().slice(7, -1), document, context, scope);
 	} else if (typeof item == "bigint") {
-		throw new Error("BigInt literals are not implemented.");
+		generate("" + item, document, context, scope);
 	} else if (Array.isArray(item)) {
 		item.forEach(entry => {
 			generate(entry, document, context, scope);
 		});
 	} else if (typeof item == "object") {
-		throw new Error("Object literals are not implemented.");
+		throw new Error("Object literals are not supported.");
 	}
 	return document;
+}
+
+function scopify(request, response, path) {
+	const scope = {};
+	scope.components = {};
+	scope.request = request;
+	scope.response = response;
+	scope.path = path;
+	scope.document = new JSDOM(template).window.document;
+	scope.on = (element, item) => {
+		generate(item, scope.document, element, scope);
+	};
+	return scope;
 }
 
 class RML {
@@ -144,23 +149,19 @@ class RML {
 	delete(url, handler = () => {}) {
 		this.app.delete(url, handler);
 	}
-	page(url = "/", text, dir = ".") {
+	page(url = "/", text = "", dir = ".") {
 		this.app.get(url, (req, res) => {
-			const scope = {};
-			scope[":request"] = req;
-			scope[":response"] = res;
-			scope[":path"] = dir;
-			res.send(generate(evaluate(`[${text}]`, scope), undefined, undefined, scope).documentElement.outerHTML);
+			const scope = scopify(req, res, dir);
+			scope.on(scope.document.body, evaluate(`[${text}]`, scope))
+			res.send(scope.document.documentElement.outerHTML);
 		});
 	}
 	pageFile(url = "/", file = "index.js") {
 		this.app.get(url, (req, res) => {
 			const text = fs.readFileSync(file, "utf-8");
-			const scope = {};
-			scope[":request"] = req;
-			scope[":response"] = res;
-			scope[":path"] = path.dirname(file);
-			res.send(generate(evaluate(`[${text}]`, scope), undefined, undefined, scope).documentElement.outerHTML);
+			const scope = scopify(req, res, path.dirname(file));
+			scope.on(scope.document.body, evaluate(`[${text}]`, scope))
+			res.send(scope.document.documentElement.outerHTML);
 		});
 	}
 	api(url, handler = () => {}) {

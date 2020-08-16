@@ -5,8 +5,10 @@
 ```js
 const {listen} = require("rigidml");
 
-const app = listen(80);
+const port = +(process.argv[2] || "8080");
+const app = listen(port);
 app.pageFile("/", "home.js");
+console.log(`The example page is now listening on port ${port}.`);
 ```
 
 ## Example (home.js)
@@ -16,15 +18,23 @@ h1 => [
 	($id) => 'dissapearing',
 	(color) => 'red',
 	(fontFamily) => 'Sans-Serif',
-	(fontSize) => '24px',
+	(fontSize) => '64px',
 	"Hello, ", p => [
 		(color) => 'blue',
 		(display) => 'inline-block',
 		"world"
 	], "!"
 ],
-$ => setTimeout(() => $("#dissapearing").hide(), 5000)
+script => `setTimeout(() => $("#dissapearing").hide(), 5000)`
 ```
+
+## Scope Object
+`this.components` The object that contains all of the components.  
+`this.request` The HTTP request object passed from express.  
+`this.response` The HTTP response object passed from express.  
+`this.path` The directory from which this RML script was called from.  
+`this.document` The NodeJS document object which contains the DOM.  
+`this.on` Helper that executes an item on a specific element.  
 
 ## Application
 `app.page(url, text, dir)` Handles get requests with RigidML source text.  
@@ -49,8 +59,12 @@ $ => setTimeout(() => $("#dissapearing").hide(), 5000)
 
 ## Literals
 `array` Each item in the list is executed individually.  
-`string` Treated as plain HTML and is appended to the target element.  
 `function` Many things can be done with arrow functions, shown below.  
+`string` Treated as plain HTML and is appended to the target element.  
+`number` Treated as plain HTML and is appended to the target element.  
+`boolean` Treated as plain HTML and is appended to the target element.  
+`bigint` Treated as plain HTML and is appended to the target element.  
+`symbol` Description treated as plain HTML and is appended to the target element.  
 `undefined` Nothing is applied or done with an undefined value.
 
 ## Functions
@@ -58,7 +72,6 @@ $ => setTimeout(() => $("#dissapearing").hide(), 5000)
 `(key) => val` Defines a CSS property on the active element.  
 `($key) => val` Assigns an HTML property to the active element.  
 `($) => val` Includes a file relative to the current file.  
-`$key => val` Assigns a property to the current context obect.  
-`$ => val` Inserts a script tag with the function as its content.  
+`$key => val` Instantiates an existing component.  
+`$ => key => val` Defines a component that can be reused.  
 `() => val` Gets executed once the element is reached.  
-`({$}) => val` Includes a file based on the directory the app was called from.  
