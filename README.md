@@ -1,4 +1,4 @@
-# RigidML v2.0.0
+# RigidML v2.0.1
 
 ## Example (index.js)
 
