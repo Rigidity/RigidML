@@ -61,18 +61,18 @@ const template = `
 </html>
 `;
 
-function generate(item, document, context, scope) {
+async function generate(item, document, context, scope) {
 	if (typeof item == "string") {
 		context.innerHTML += item;
 	} else if (typeof item == "boolean") {
-		generate("" + item, document, context, scope);
+		await generate("" + item, document, context, scope);
 	} else if (typeof item == "function") {
 		const text = item.toString().split("=>")[0].trim();
 		if (text.replace(/[^a-zA-Z0-9$_()]/g, "") != text) {
 			throw new Error("Complex function literals are not supported.");
 		}
 		if (text == "$") {
-			const content = item();
+			const content = await item();
 			if (typeof content != "function") {
 				throw new Error("Component definitions must be arrow functions.");
 			}
@@ -83,34 +83,36 @@ function generate(item, document, context, scope) {
 			scope.components[name] = content;
 		} else if (text.startsWith("$")) {
 			const subtext = text.slice(1);
-			generate(scope.components[subtext](item()), document, context, scope);
+			await generate(scope.components[subtext](await item()), document, context, scope);
 		} else if (text.startsWith("(") && text.endsWith(")")) {
 			const subtext = text.slice(1, -1).trim();
 			if (subtext == "$") {
-				generate(evaluate("[" + fs.readFileSync(path.join(scope.path, item()), "utf-8") + "]", scope), document, context, scope);
+				await generate(evaluate("[" + fs.readFileSync(path.join(scope.path, await item()), "utf-8") + "]", scope), document, context, scope);
 			} else if (subtext.startsWith("$")) {
 				const substr = subtext.slice(1);
-				context.setAttribute(substr, item());
+				context.setAttribute(substr, await item());
 			} else if (subtext == "") {
-				generate(item(), document, context, scope);
+				await generate(await item(), document, context, scope);
 			} else {
-				context.style[subtext] = item();
+				context.style[subtext] = await item();
 			}
 		} else {
 			const container = document.createElement(text);
-			generate(item(), document, container, scope);
+			await generate(await item(), document, container, scope);
 			context.appendChild(container);
 		}
 	} else if (typeof item == "number") {
-		generate("" + item, document, context, scope);
+		await generate("" + item, document, context, scope);
 	} else if (typeof item == "symbol") {
-		generate(item.toString().slice(7, -1), document, context, scope);
+		await generate(item.toString().slice(7, -1), document, context, scope);
 	} else if (typeof item == "bigint") {
-		generate("" + item, document, context, scope);
+		await generate("" + item, document, context, scope);
 	} else if (Array.isArray(item)) {
-		item.forEach(entry => {
-			generate(entry, document, context, scope);
-		});
+		for (var i = 0; i < item.length; i++) {
+			await generate(item[i], document, context, scope);
+		}
+	} else if (item instanceof Promise) {
+		await generate(await item, document, context, scope);
 	} else if (typeof item == "object") {
 		throw new Error("Object literals are not supported.");
 	}
@@ -124,8 +126,8 @@ function scopify(request, response, path) {
 	scope.response = response;
 	scope.path = path;
 	scope.document = new JSDOM(template).window.document;
-	scope.on = (element, item) => {
-		generate(item, scope.document, element, scope);
+	scope.on = async (element, item) => {
+		await generate(item, scope.document, element, scope);
 	};
 	return scope;
 }
@@ -150,17 +152,17 @@ class RML {
 		this.app.delete(url, handler);
 	}
 	page(url = "/", text = "", dir = ".") {
-		this.app.get(url, (req, res) => {
+		this.app.get(url, async (req, res) => {
 			const scope = scopify(req, res, dir);
-			scope.on(scope.document.body, evaluate(`[${text}]`, scope));
+			await scope.on(scope.document.body, evaluate(`[${text}]`, scope));
 			res.send(scope.document.documentElement.outerHTML);
 		});
 	}
 	pageFile(url = "/", file = "index.js") {
-		this.app.get(url, (req, res) => {
+		this.app.get(url, async (req, res) => {
 			const text = fs.readFileSync(file, "utf-8");
 			const scope = scopify(req, res, path.dirname(file));
-			scope.on(scope.document.body, evaluate(`[${text}]`, scope));
+			await scope.on(scope.document.body, evaluate(`[${text}]`, scope));
 			res.send(scope.document.documentElement.outerHTML);
 		});
 	}

@@ -1,11 +1,3 @@
-form => [
-	($method) => "POST",
-	($action) => "/api",
-	input => [
-		($type) => "hidden",
-		($name) => "test"
-	],
-	input => [
-		($type) => "submit"
-	]
-]
+($) => '../components/async.js',
+() => console.log(this.components),
+$timeout => ['hello', 5000]
