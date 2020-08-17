@@ -1,4 +1,4 @@
-# RigidML v2.1.0
+# Rigid Markup Library
 
 ## Example (index.js)
 
