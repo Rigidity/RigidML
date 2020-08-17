@@ -126,7 +126,12 @@ function scopify(request, response, path) {
 	scope.response = response;
 	scope.path = path;
 	scope.document = new JSDOM(template).window.document;
-	scope.require = path => require.main.require(path);
+	scope.require = (path, cache = true) => {
+		if (!cache) {
+			delete require.main.require.cache[require.main.require.resolve(path)];
+		}
+		return require.main.require(path);
+	};
 	scope.library = (path, module = "rigidml") => require("path").join("node_modules", module, path);
 	scope.on = async (element, item) => {
 		await generate(item, scope.document, element, scope);
