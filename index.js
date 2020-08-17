@@ -152,7 +152,7 @@ class RML {
 	page(url = "/", text = "", dir = ".") {
 		this.app.get(url, (req, res) => {
 			const scope = scopify(req, res, dir);
-			scope.on(scope.document.body, evaluate(`[${text}]`, scope))
+			scope.on(scope.document.body, evaluate(`[${text}]`, scope));
 			res.send(scope.document.documentElement.outerHTML);
 		});
 	}
@@ -160,7 +160,7 @@ class RML {
 		this.app.get(url, (req, res) => {
 			const text = fs.readFileSync(file, "utf-8");
 			const scope = scopify(req, res, path.dirname(file));
-			scope.on(scope.document.body, evaluate(`[${text}]`, scope))
+			scope.on(scope.document.body, evaluate(`[${text}]`, scope));
 			res.send(scope.document.documentElement.outerHTML);
 		});
 	}
