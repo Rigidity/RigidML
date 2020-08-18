@@ -61,11 +61,12 @@ const template = `
 </html>
 `;
 
-async function generate(item, document, context, scope) {
+async function generate(data) {
+	const {item, document, context, scope, dir} = data;
 	if (typeof item == "string") {
 		context.innerHTML += item;
 	} else if (typeof item == "boolean") {
-		await generate("" + item, document, context, scope);
+		await generate({...data, item: "" + item});
 	} else if (typeof item == "function") {
 		const text = item.toString().split("=>")[0].trim();
 		if (text.replace(/[^a-zA-Z0-9$_()]/g, "") != text) {
@@ -80,48 +81,52 @@ async function generate(item, document, context, scope) {
 			if (name.replace(/[^a-zA-Z0-9_$]/g, "") != name) {
 				throw new Error("Complex component definitions are not supported.");
 			}
-			scope.components[name] = content;
+			scope['$' + name] = content;
 		} else if (text.startsWith("$")) {
 			const subtext = text.slice(1);
-			await generate(scope.components[subtext](await item()), document, context, scope);
+			if (scope['$' + subtext] === undefined) {
+				throw new Error(`The component ${subtext} is not defined.`);
+			}
+			await generate({...data, item: scope['$' + subtext](await item())});
 		} else if (text.startsWith("(") && text.endsWith(")")) {
 			const subtext = text.slice(1, -1).trim();
 			if (subtext == "$") {
-				await generate(evaluate("[" + fs.readFileSync(path.join(scope.path, await item()), "utf-8") + "]", scope), document, context, scope);
+				const newfile = path.join(scope.path, await item());
+				const newpath = path.dirname(newfile);
+				await generate({...data, item: evaluate("[" + fs.readFileSync(newfile, "utf-8") + "]", scope), dir: newpath});
 			} else if (subtext.startsWith("$")) {
 				const substr = subtext.slice(1);
 				context.setAttribute(substr, await item());
 			} else if (subtext == "") {
-				await generate(await item(), document, context, scope);
+				await generate({...data, item: await item()});
 			} else {
 				context.style[subtext] = await item();
 			}
 		} else {
 			const container = document.createElement(text);
-			await generate(await item(), document, container, scope);
+			await generate({...data, item: await item(), context: container});
 			context.appendChild(container);
 		}
 	} else if (typeof item == "number") {
-		await generate("" + item, document, context, scope);
+		await generate({...data, item: "" + item});
 	} else if (typeof item == "symbol") {
-		await generate(item.toString().slice(7, -1), document, context, scope);
+		await generate({...data, item: item.toString().slice(7, -1)});
 	} else if (typeof item == "bigint") {
-		await generate("" + item, document, context, scope);
+		await generate({...data, item: "" + item});
 	} else if (Array.isArray(item)) {
 		for (var i = 0; i < item.length; i++) {
-			await generate(item[i], document, context, scope);
+			await generate({...data, item: item[i]});
 		}
 	} else if (item instanceof Promise) {
-		await generate(await item, document, context, scope);
+		await generate({...data, item: await item});
 	} else if (typeof item == "object") {
-		await generate(JSON.stringify(item), document, context, scope);
+		await generate({...data, item: JSON.stringify(item)});
 	}
 	return document;
 }
 
 function scopify(request, response, path, callback) {
 	const scope = {};
-	scope.components = {};
 	scope.request = request;
 	scope.response = response;
 	scope.path = path;
@@ -129,7 +134,7 @@ function scopify(request, response, path, callback) {
 	callback(scope.data);
 	scope.document = new JSDOM(template).window.document;
 	scope.on = async (element, item) => {
-		await generate(item, scope.document, element, scope);
+		await generate({item, document: scope.document, context: element, scope});
 	};
 	return scope;
 }
