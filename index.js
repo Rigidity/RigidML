@@ -114,25 +114,20 @@ async function generate(item, document, context, scope) {
 	} else if (item instanceof Promise) {
 		await generate(await item, document, context, scope);
 	} else if (typeof item == "object") {
-		throw new Error("Object literals are not supported.");
+		await generate(JSON.stringify(item), document, context, scope);
 	}
 	return document;
 }
 
-function scopify(request, response, path) {
+function scopify(request, response, path, callback) {
 	const scope = {};
 	scope.components = {};
 	scope.request = request;
 	scope.response = response;
 	scope.path = path;
+	scope.data = {};
+	callback(scope.data);
 	scope.document = new JSDOM(template).window.document;
-	scope.require = (path, cache = true) => {
-		if (!cache) {
-			delete require.main.require.cache[require.main.require.resolve(path)];
-		}
-		return require.main.require(path);
-	};
-	scope.library = (path, module = "rigidml") => require("path").join("node_modules", module, path);
 	scope.on = async (element, item) => {
 		await generate(item, scope.document, element, scope);
 	};
@@ -158,17 +153,21 @@ class RML {
 	delete(url, handler = () => {}) {
 		this.app.delete(url, handler);
 	}
-	page(url = "/", text = "", dir = ".") {
+	page(url = "/", text = "", dir = ".", handler = () => {}) {
 		this.app.get(url, async (req, res) => {
-			const scope = scopify(req, res, dir);
+			const scope = scopify(req, res, dir, data => {
+				handler(data, req, res);
+			});
 			await scope.on(scope.document.body, evaluate(`[${text}]`, scope));
 			res.send(scope.document.documentElement.outerHTML);
 		});
 	}
-	pageFile(url = "/", file = "index.js") {
+	pageFile(url = "/", file = "index.js", handler = () => {}) {
 		this.app.get(url, async (req, res) => {
 			const text = fs.readFileSync(file, "utf-8");
-			const scope = scopify(req, res, path.dirname(file));
+			const scope = scopify(req, res, path.dirname(file), data => {
+				handler(data, req, res);
+			});
 			await scope.on(scope.document.body, evaluate(`[${text}]`, scope));
 			res.send(scope.document.documentElement.outerHTML);
 		});

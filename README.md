@@ -35,10 +35,11 @@ script => `setTimeout(() => $("#dissapearing").hide(), 5000)`
 `this.path` The directory from which this RML script was called from.  
 `this.document` The NodeJS document object which contains the DOM.  
 `this.on` Helper that executes an item on a specific element.  
+`this.data` Data object that contains items passed from the handler.  
 
 ## Application
-`app.page(url, text, dir)` Handles get requests with RigidML source text.  
-`app.pageFile(url, file)` Handles get requests with a RigidML file.  
+`app.page(url, text, dir, handler)` Handles get requests with RigidML source text.  
+`app.pageFile(url, file, handler)` Handles get requests with a RigidML file.  
 `app.api(url, handler)` Handles post requests with an API utility object.  
 `app.apiFile(url, file)` Handles post requests in a file in a bound utility object.  
 `app.static(path)` Includes a static folder on the application.  
@@ -66,8 +67,9 @@ script => `setTimeout(() => $("#dissapearing").hide(), 5000)`
 `number` Treated as plain HTML and is appended to the target element.  
 `boolean` Treated as plain HTML and is appended to the target element.  
 `bigint` Treated as plain HTML and is appended to the target element.  
+`object` Stringified as JSON and is appended to the target element.  
 `symbol` Description treated as plain HTML and is appended to the target element.  
-`undefined` Nothing is applied or done with an undefined value.
+`undefined` Nothing is applied or done with an undefined value.  
 
 ## Functions
 `key => val` The simplest type of function. Makes an HTML element.  

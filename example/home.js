@@ -1,3 +1,5 @@
-($) => '../components/async.js',
-() => console.log(this.components),
-$timeout => ['hello', 5000]
+($) => '../components/grid.js',
+$columns => [
+	$1 => this.data.greet("world"),
+	$2 => this.data.greet("Bob")
+]
